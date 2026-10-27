@@ -13,3 +13,11 @@ INSERT INTO ipl_innings VALUES
   (11, '2024-04-03', 2024, 'Mira Patel', 12),
   (12, '2024-04-05', 2024, 'Mira Patel', 52),
   (13, '2024-04-07', 2024, 'Mira Patel', 35);
+
+-- Gap Player scores 30+ in matches 10, 12 and 13, but did not appear in match 11.
+-- The missing team match must break a three-match streak.
+INSERT INTO ipl_innings VALUES
+  (10, '2024-04-01', 2024, 'Gap Player', 40),
+  (12, '2024-04-05', 2024, 'Gap Player', 42),
+  (13, '2024-04-07', 2024, 'Gap Player', 39);
+
