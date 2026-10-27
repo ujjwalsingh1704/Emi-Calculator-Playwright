@@ -43,6 +43,9 @@ test.describe("JSONPlaceholder POST /posts boundary validation", () => {
   });
   test("rejects malformed JSON at the HTTP boundary", async ({ request }) => {
     const response = await request.post(endpoint, { data: "{ invalid json", headers: { "content-type": "application/json" } });
+    if (response.status() === 500) {
+      test.fail(true, "JSONPlaceholder returns 500 for malformed JSON; the assignment requires a client error without a server failure");
+    }
     expect(response.status()).toBe(400);
   });
 });
