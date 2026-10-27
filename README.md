@@ -37,11 +37,11 @@ AI-assisted repair workflow: (1) capture the failing locator, DOM snapshot, acce
 
 ## API test notes
 
-JSONPlaceholder is a mock, not a schema-validating production service. It commonly accepts missing fields and long/special-character values and returns a synthetic `201`; the tests record this documented behavior instead of asserting an invented `4xx` contract. The malformed JSON test accepts a client/server parse error. A production API should have an explicit schema contract and precise status-code assertions.
+JSONPlaceholder is a mock, not a schema-validating production service. The suite checks an excessively long title, a control character, a missing `userId`, and malformed JSON against the assignment's error-handling requirements. A successful response to invalid input is marked as an expected contract mismatch; a network error or server error remains a real failure. Earlier live runs showed JSONPlaceholder returning synthetic `201` responses for invalid objects. A production API with validation enabled is needed for a fully passing invalid-input contract check.
 
 ## SQL
 
-See [sql/README.md](sql/README.md) for the schema, sample data, PostgreSQL query execution order, assumptions and sample results. Run `python sql/verify-sqlite.py` to execute the fixture locally. The IPL query interprets consecutive match IDs in the fixture as consecutive matches; an authoritative dataset is needed to make broader season claims.
+See [sql/README.md](sql/README.md) for the schema, sample data, PostgreSQL query execution order, assumptions and sample results. Run `python sql/verify-sqlite.py` to execute the fixture locally. The IPL query now builds a full player-by-match grid from the 2024 match IDs in the dataset, so a missing player row or a score below 30 breaks a streak. A complete schedule and player-match records are needed for authoritative full-season results.
 
 ## AI pairing reflection
 
@@ -49,5 +49,5 @@ AI was used as a pair programmer to map the assessment into a working applicatio
 
 ## Test execution results
 
-Latest local run: TypeScript typecheck passed; Next.js production build passed; API suite passed 5/5; UI suite passed 3/3 scenarios and 15/15 steps. The HTML reports are checked in under `artifacts/`; see `artifacts/assessment-results.md` for run details. The API suite requires internet access; the UI suite requires Chromium and a running local server.
+Latest local run: see `artifacts/assessment-results.md` for current run status. The API suite requires internet access; the UI suite requires Chromium and a running local server. Playwright HTML reports are generated locally by the test commands.
 
