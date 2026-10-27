@@ -37,7 +37,7 @@ AI-assisted repair workflow: (1) capture the failing locator, DOM snapshot, acce
 
 ## API test notes
 
-JSONPlaceholder is a mock, not a schema-validating production service. The suite checks an excessively long title, a control character, a missing `userId`, and malformed JSON against the assignment's error-handling requirements. A successful response to invalid input is marked as an expected contract mismatch; a network error or server error remains a real failure. Earlier live runs showed JSONPlaceholder returning synthetic `201` responses for invalid objects. A production API with validation enabled is needed for a fully passing invalid-input contract check.
+JSONPlaceholder is a mock, not a schema-validating production service. The suite checks an excessively long title, a control character, a missing `userId`, and malformed JSON against the assignment's error-handling requirements. The live check returned synthetic `201` responses for the first three invalid inputs and `500` for malformed JSON. Those four cases are marked as expected contract failures so the mismatch remains visible; the endpoint itself does not meet the requested invalid-input behavior. A validation-enabled API would be needed to pass those checks.
 
 ## SQL
 
