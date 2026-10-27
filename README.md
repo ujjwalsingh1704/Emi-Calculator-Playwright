@@ -69,13 +69,13 @@ Feature files describe behavior; Cucumber step definitions coordinate actions; `
 
 ## Locator self-healing exercise
 
-`features/locator-self-healing.feature` contains three intentionally broken locator cases, tagged `@self-heal`; the standard run excludes this tag so regular assessment results stay meaningful. To demonstrate the broken cases, run `npm run test:self-heal` (they should fail).
+`features/locator-self-healing.feature` contains three repaired scenarios: both sliders are found by their accessible names, and the balance chart is found by its accessible role and name. Run them alone with `npm run test:self-heal`; they are also included in the standard `npm run test:ui` and `npm run test:all` runs.
 
-AI-assisted repair workflow: (1) capture the failing locator, DOM snapshot, accessible name/role, and error; (2) prompt an AI to propose the most specific semantic locator, preferring role/label/text and using a stable `data-testid` only where no user-facing semantics exist; (3) inspect the DOM and confirm the target is unique and represents the intended control; (4) apply the repair in the page object; (5) run the focused scenario, then the full suite, and inspect trace/screenshot on failure. Never auto-apply a suggestion based only on fuzzy text similarity. The three broken examples intentionally remain unfixed as requested by the exercise.
+The locator exercise follows a reviewable repair workflow: inspect the UI's accessible labels and roles, replace brittle positional or stale selectors with semantic locators, and assert the located control's value or visibility.
 
 ## API test notes
 
-JSONPlaceholder is a mock, not a schema-validating production service. The suite checks an excessively long title, a control character, a missing `userId`, and malformed JSON against the assignment's error-handling requirements. The live check returned synthetic `201` responses for the first three invalid inputs and `500` for malformed JSON. Those four cases are marked as expected contract failures so the mismatch remains visible; the endpoint itself does not meet the requested invalid-input behavior. A validation-enabled API would be needed to pass those checks.
+The Playwright suite targets the local `POST /api/posts` validation proxy. It validates a non-empty title (up to 255 characters), a non-empty body, and a positive integer `userId`; malformed JSON receives `400`, and invalid fields receive `422` with an error message. Valid posts are forwarded to JSONPlaceholder, so the API checks require internet access for the valid-post scenario.
 
 ## SQL
 
@@ -87,4 +87,4 @@ AI was used as a pair programmer to map the assessment into a working applicatio
 
 ## Test execution results
 
-Latest local run: see [artifacts/assessment-results.md](artifacts/assessment-results.md) for current run status. The API suite requires internet access; the UI suite requires Chromium and a running local server. Playwright HTML reports are generated locally by the test commands.
+See [artifacts/assessment-results.md](artifacts/assessment-results.md) for the latest recorded results. The [GitHub Actions workflow](.github/workflows/assessment.yml) runs typecheck, build, API validation, and the complete Cucumber UI suite, then uploads the Playwright reports. Locally, API tests start the Next.js server automatically; start the app separately before running the Cucumber UI suite.
