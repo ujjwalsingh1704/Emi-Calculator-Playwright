@@ -1,14 +1,14 @@
 # Assessment run results
 
-Run on 2026-10-28 in the project workspace after correcting the IPL streak query.
+Run on 2026-10-28 after correcting the IPL streak query and re-running the application checks.
 
 | Check | Result |
 | --- | --- |
 | `npm run typecheck` | Passed |
 | `npm run build` | Passed |
-| `python sql/verify-sqlite.py` | Passed; round-trip transfers 1 and 2 found; Aarav Sharma has a 3-match 30+ streak from 2024-04-01; the fixture confirms a missed match breaks Gap Player's streak |
-| `npm run test:ui` | Could not reach the app: Chromium reported `ERR_NETWORK_ACCESS_DENIED` for `http://127.0.0.1:3000/`. All three scenarios stopped at initial navigation, before app assertions. |
-| `npm run test:api` | Could not reach JSONPlaceholder: DNS lookup returned `ENOTFOUND jsonplaceholder.typicode.com` for all five requests. The missing-field assertion has not been re-evaluated against a live response in this run. |
+| `npm run test:ui` | Passed: 3 scenarios and 15 steps, including both home-loan calculations, positive pie-chart values, personal-loan bars, and the schedule start month. |
+| `npm run test:api` | Playwright completed 5 tests. The normal post passed; 4 invalid-input cases surfaced as expected contract failures: JSONPlaceholder returned `201` for the 100,000-character title, control character, and missing `userId`, and `500` for malformed JSON. |
+| `python sql/verify-sqlite.py` | Passed; round-trip transfers 1 and 2 found; Aarav Sharma has a 3-match 30+ streak from 2024-04-01; the fixture confirms a missed match breaks Gap Player's streak. |
 
-The UI and API HTML reports contain the current run diagnostics. The SQL verifier writes reproducible output to `artifacts/sql-results.json`. Re-run the UI suite with the app available at `APP_BASE_URL` and the API suite with network access to verify those integrations. JSONPlaceholder is a permissive mock and may return `201` for invalid input, which would be reported as an expected contract failure by the missing-field test.
+The four API cases are marked as expected failures so the provider's behavior stays visible. Playwright exits successfully for expected failures, but this does not mean JSONPlaceholder meets the assignment's invalid-input requirements. The API HTML report is at `artifacts/api-report/index.html`, the UI report at `artifacts/ui-report.html`, and the SQL verifier writes its output to `artifacts/sql-results.json`.
 
