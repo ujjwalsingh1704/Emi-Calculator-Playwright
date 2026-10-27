@@ -24,21 +24,21 @@ test.describe("POST /api/posts validation proxy", () => {
     const response = await request.post(endpoint, {
       data: { title: "x".repeat(100_000), body: "long title boundary", userId: 1 }
     });
-    expectValidationError(response);
+    await expectValidationError(response);
   });
 
   test("rejects unsupported control characters in a title", async ({ request }) => {
     const response = await request.post(endpoint, {
       data: { title: "unsupported\u0000character", body: "control character boundary", userId: 2 }
     });
-    expectValidationError(response);
+    await expectValidationError(response);
   });
 
   test("requires userId", async ({ request }) => {
     const response = await request.post(endpoint, {
       data: { title: "missing userId", body: "field omitted" }
     });
-    expectValidationError(response);
+    await expectValidationError(response);
   });
 
   test("rejects malformed JSON with a client error", async ({ request }) => {
