@@ -15,5 +15,9 @@
       "2024-04-01",
       3
     ]
-  ]
+  ],
+  "fixture_checks": {
+    "missed_match_breaks_streak": true
+  }
 }
+
