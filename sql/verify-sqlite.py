@@ -27,4 +27,14 @@ streaks = db.execute((ROOT / "scenario-2-ipl-streaks.sql").read_text(encoding="u
 
 assert len(round_trips) == 1 and round_trips[0][:2] == (1, 2), round_trips
 assert streaks == [("Aarav Sharma", "2024-04-01", 3)], streaks
-print(json.dumps({"scenario1_round_trips": round_trips, "scenario2_ipl_streaks": streaks}, indent=2))
+results = {
+    "scenario1_round_trips": round_trips,
+    "scenario2_ipl_streaks": streaks,
+    "fixture_checks": {
+        "missed_match_breaks_streak": "Gap Player" not in {row[0] for row in streaks},
+    },
+}
+output = json.dumps(results, indent=2)
+(ROOT.parent / "artifacts" / "sql-results.json").write_text(output + "\n", encoding="utf-8")
+print(output)
+
