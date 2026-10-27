@@ -21,7 +21,7 @@ Open `http://localhost:3000`. The Home Loan tab defaults to 25 lakh, 10%, 10 yea
 | A1 dashboard, input-driven report, chart | `app/page.tsx`: calculator, pie breakdown, month schedule and bar chart |
 | A2 framework and UI tests | `features/emi-calculator.feature`, `tests/steps`, `tests/pages`, `cucumber.cjs` |
 | A3 JSONPlaceholder POST boundaries | `tests/api/posts.spec.ts`, Playwright request fixture |
-| A4 SQL | `sql/schema.sql`, sample data and two scenario queries |
+| A4 PostgreSQL | `sql/schema.sql`, `sql/sample-data.sql`, and two PostgreSQL scenario queries; pgAdmin evidence instructions are in `sql/README.md` |
 
 Run UI scenarios with `npm run test:ui` (start the app separately). Run API scenarios with `npm run test:api`. Run both using `npm run test:all`. UI tests write `artifacts/ui-report.html`; API tests write `artifacts/api-report/`.
 
@@ -41,7 +41,7 @@ JSONPlaceholder is a mock, not a schema-validating production service. The suite
 
 ## SQL
 
-See [sql/README.md](sql/README.md) for the schema, sample data, PostgreSQL query execution order, assumptions and sample results. Run `python sql/verify-sqlite.py` to execute the fixture locally. The IPL query now builds a full player-by-match grid from the 2024 match IDs in the dataset, so a missing player row or a score below 30 breaks a streak. A complete schedule and player-match records are needed for authoritative full-season results.
+PostgreSQL is the A4 database. See [sql/README.md](sql/README.md) for the table schema, primary and foreign keys, pgAdmin run order, expected outputs and screenshot checklist. The four normalized tables are `transfers`, `ipl_matches`, `ipl_players`, and `ipl_player_match_performance`. The compact fixture demonstrates the scenarios; full-season IPL results require the complete schedule and player-performance records. The SQLite script is only a supplemental local fixture check, not the A4 database evidence.
 
 ## AI pairing reflection
 
@@ -50,4 +50,3 @@ AI was used as a pair programmer to map the assessment into a working applicatio
 ## Test execution results
 
 Latest local run: see `artifacts/assessment-results.md` for current run status. The API suite requires internet access; the UI suite requires Chromium and a running local server. Playwright HTML reports are generated locally by the test commands.
-

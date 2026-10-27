@@ -1,46 +1,49 @@
--- Treat every match in the 2024 dataset as a chance to extend or break a player's streak.
--- Missing player rows are treated as no appearance and therefore break the streak.
+-- Return every 2024 run of at least three consecutive team matches with 30+ runs.
+-- A missing performance row means the player did not appear and breaks the streak.
 WITH season_matches AS (
-  SELECT match_id, MIN(match_date) AS match_date
-  FROM ipl_innings
+  SELECT match_id, match_date
+  FROM ipl_matches
   WHERE season = 2024
-  GROUP BY match_id
-), players AS (
-  SELECT DISTINCT player_name
-  FROM ipl_innings
-  WHERE season = 2024
+), season_players AS (
+  SELECT DISTINCT p.player_id, p.player_name
+  FROM ipl_players AS p
+  JOIN ipl_player_match_performance AS pm
+    ON pm.player_id = p.player_id
+  JOIN ipl_matches AS m
+    ON m.match_id = pm.match_id
+  WHERE m.season = 2024
 ), player_match_grid AS (
   SELECT
+    p.player_id,
     p.player_name,
     m.match_id,
     m.match_date,
-    COALESCE(i.runs, 0) AS runs
-  FROM players AS p
+    COALESCE(pm.runs, 0) AS runs
+  FROM season_players AS p
   CROSS JOIN season_matches AS m
-  LEFT JOIN ipl_innings AS i
-    ON i.player_name = p.player_name
-   AND i.match_id = m.match_id
-   AND i.season = 2024
+  LEFT JOIN ipl_player_match_performance AS pm
+    ON pm.player_id = p.player_id
+   AND pm.match_id = m.match_id
 ), marked AS (
   SELECT
     *,
     SUM(CASE WHEN runs >= 30 THEN 0 ELSE 1 END) OVER (
-      PARTITION BY player_name
+      PARTITION BY player_id
       ORDER BY match_date, match_id
       ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
     ) AS streak_group
   FROM player_match_grid
 ), streaks AS (
   SELECT
+    player_id,
     player_name,
     MIN(match_date) AS streak_started,
     COUNT(*) AS qualifying_matches
   FROM marked
   WHERE runs >= 30
-  GROUP BY player_name, streak_group
+  GROUP BY player_id, player_name, streak_group
   HAVING COUNT(*) >= 3
 )
 SELECT player_name, streak_started, qualifying_matches
 FROM streaks
 ORDER BY player_name, streak_started;
-

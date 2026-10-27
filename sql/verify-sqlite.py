@@ -37,4 +37,3 @@ results = {
 output = json.dumps(results, indent=2)
 (ROOT.parent / "artifacts" / "sql-results.json").write_text(output + "\n", encoding="utf-8")
 print(output)
-

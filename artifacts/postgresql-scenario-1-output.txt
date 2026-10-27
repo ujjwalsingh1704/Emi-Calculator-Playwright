@@ -1,0 +1,6 @@
+PostgreSQL pgAdmin Query Tool result
+
+ outbound_transfer_id | return_transfer_id | outbound_amount | return_amount
+---------------------+-------------------+-----------------+-------------
+                   1 |                 2 |         1000.00 |     1080.00
+(1 row)

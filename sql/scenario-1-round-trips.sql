@@ -1,13 +1,9 @@
 -- Same-account A -> B and B -> A transfers within 24 hours, amounts within 10%.
 SELECT
-  ab.account_from AS account_a,
-  ab.account_to AS account_b,
-  ab.transfer_id AS outbound_transfer_id,
-  ba.transfer_id AS return_transfer_id,
+  ab.transfer_id AS outbound_id,
+  ba.transfer_id AS return_id,
   ab.amount AS outbound_amount,
-  ba.amount AS return_amount,
-  ab.transferred_at AS outbound_at,
-  ba.transferred_at AS return_at
+  ba.amount AS return_amount
 FROM transfers AS ab
 JOIN transfers AS ba
   ON ba.account_from = ab.account_to
