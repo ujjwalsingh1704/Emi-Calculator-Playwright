@@ -1,16 +1,15 @@
 @self-heal
-Feature: Locator self-healing exercise
-  # Deliberately broken examples. Keep excluded from the standard run until an AI locator review is applied and validated.
-  Scenario: Broken positional locator for loan amount
+Feature: Repaired semantic locators
+  Scenario: Update the loan amount using its accessible slider
     Given I open the EMI calculator
-    When I set loan amount using the legacy nth child locator
-    Then the legacy selector should locate the loan amount slider
+    When I set the "Loan Amount" slider to 30
+    Then the "Loan Amount" slider should have value "30"
 
-  Scenario: Broken old label for interest rate
+  Scenario: Update the interest rate using its accessible slider
     Given I open the EMI calculator
-    When I set interest using the obsolete label
-    Then the legacy selector should locate the interest rate slider
+    When I set the "Interest Rate" slider to 9
+    Then the "Interest Rate" slider should have value "9"
 
-  Scenario: Broken old chart selector
+  Scenario: Locate the balance chart by its accessible name
     Given I open the EMI calculator
-    Then the legacy selector should locate the historical chart container
+    Then the balance chart should be visible by its accessible name
