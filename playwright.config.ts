@@ -4,6 +4,15 @@ export default defineConfig({
   testDir: "./tests/api",
   fullyParallel: true,
   reporter: [["list"], ["html", { outputFolder: "artifacts/api-report", open: "never" }]],
-  use: { baseURL: "https://jsonplaceholder.typicode.com", trace: "retain-on-failure" },
+  use: {
+    baseURL: process.env.API_BASE_URL || "http://127.0.0.1:3000",
+    trace: "retain-on-failure"
+  },
+  webServer: {
+    command: "npm run dev -- --hostname 127.0.0.1 --port 3000",
+    url: "http://127.0.0.1:3000",
+    reuseExistingServer: !process.env.CI,
+    timeout: 120_000
+  },
   timeout: 30_000
 });
