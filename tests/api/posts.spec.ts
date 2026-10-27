@@ -43,7 +43,7 @@ test.describe("POST /api/posts validation proxy", () => {
 
   test("rejects malformed JSON with a client error", async ({ request }) => {
     const response = await request.post(endpoint, {
-      data: "{ invalid json",
+      data: Buffer.from("{ invalid json"),
       headers: { "content-type": "application/json" }
     });
     expect(response.status()).toBe(400);
