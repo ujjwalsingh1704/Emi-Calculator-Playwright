@@ -2,6 +2,44 @@
 
 This project implements **Option A / Section A** of the Streamhub assessment. It includes a small responsive EMI application, a Playwright + Cucumber UI framework, JSONPlaceholder POST boundary coverage, and SQL scenarios with a reproducible sample fixture.
 
+## Project map
+
+```mermaid
+flowchart LR
+    User([User]) --> App[EMI Calculator]
+    App --> Calc[EMI and repayment calculations]
+    Calc --> Charts[Pie breakdown, monthly schedule, and bar chart]
+
+    subgraph UI["A2 · UI automation"]
+        Feature[Feature scenarios] --> Steps[Cucumber step definitions]
+        Steps --> PageObject[EmiCalculatorPage]
+        PageObject --> Browser[Playwright browser]
+    end
+    Browser --> App
+
+    subgraph API["A3 · API checks"]
+        ApiTest[Playwright API tests] --> Mock[JSONPlaceholder]
+    end
+
+    subgraph SQL["A4 · PostgreSQL"]
+        Schema[Schema and keys] --> Fixture[Sample data]
+        Fixture --> Queries[Scenario queries]
+        Queries --> Evidence[pgAdmin results]
+    end
+
+    Results[Assessment results] -. summarizes .-> UI
+    Results -. summarizes .-> API
+    Results -. summarizes .-> SQL
+```
+
+Use the links below to jump straight to each part of the project:
+
+- [A1 calculator UI](app/page.tsx)
+- [A2 feature scenarios](features/emi-calculator.feature) · [step definitions](tests/steps) · [page objects](tests/pages)
+- [A3 API tests](tests/api/posts.spec.ts)
+- [A4 PostgreSQL setup and queries](sql/README.md)
+- [Latest assessment test results](artifacts/assessment-results.md)
+
 ## Setup and run
 
 Requirements: Node.js 20+, npm, and a browser supported by Playwright.
@@ -49,4 +87,4 @@ AI was used as a pair programmer to map the assessment into a working applicatio
 
 ## Test execution results
 
-Latest local run: see `artifacts/assessment-results.md` for current run status. The API suite requires internet access; the UI suite requires Chromium and a running local server. Playwright HTML reports are generated locally by the test commands.
+Latest local run: see [artifacts/assessment-results.md](artifacts/assessment-results.md) for current run status. The API suite requires internet access; the UI suite requires Chromium and a running local server. Playwright HTML reports are generated locally by the test commands.
