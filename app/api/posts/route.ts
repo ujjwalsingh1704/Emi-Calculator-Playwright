@@ -46,18 +46,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (!upstream.ok) {
-      return NextResponse.json(
-        { error: "The upstream post service could not create the post." },
-        { status: 502 }
-      );
+      return NextResponse.json({ error: "The upstream post service could not create the post." }, { status: 502 });
     }
 
-    const createdPost = await upstream.json();
-    return NextResponse.json(createdPost, { status: 201 });
+    return NextResponse.json(await upstream.json(), { status: 201 });
   } catch {
-    return NextResponse.json(
-      { error: "The upstream post service is unavailable." },
-      { status: 502 }
-    );
+    return NextResponse.json({ error: "The upstream post service is unavailable." }, { status: 502 });
   }
 }

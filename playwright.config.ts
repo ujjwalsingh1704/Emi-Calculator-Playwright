@@ -5,7 +5,7 @@ export default defineConfig({
   fullyParallel: true,
   reporter: [["list"], ["html", { outputFolder: "artifacts/api-report", open: "never" }]],
   use: {
-    baseURL: process.env.API_BASE_URL || "http://127.0.0.1:3000",
+    baseURL: process.env.APP_BASE_URL || process.env.API_BASE_URL || "http://127.0.0.1:3000",
     trace: "retain-on-failure"
   },
   webServer: {

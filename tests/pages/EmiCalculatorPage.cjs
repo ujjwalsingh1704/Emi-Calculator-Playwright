@@ -19,6 +19,9 @@ class EmiCalculatorPage {
   }
   async setStartMonth(value) { await this.page.getByLabel("Schedule start month").fill(value); }
   async expectStartMonth(value) { await expect(this.page.getByLabel("Schedule start month")).toHaveValue(value); }
+  async expectFirstPaymentDate(value) { await expect(this.page.getByTestId("schedule-first-payment-date")).toHaveText(value); }
+  bars() { return this.chart("emi-bar-chart").locator("div[title$='remaining']"); }
+  async firstBarTooltip() { return this.bars().first().getAttribute("title"); }
 }
 
 module.exports = { EmiCalculatorPage };

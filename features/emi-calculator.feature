@@ -1,6 +1,7 @@
 Feature: EMI calculator
   Scenario Outline: Calculate a home loan and render the payment chart
     Given I open the EMI calculator
+    Then the calculator dashboard should be visible
     When I select the "Home Loan" tab
     And I set loan amount to <amount> lakhs, interest rate to <rate> percent, and tenure to <years> years
     Then the monthly EMI should equal the independently calculated amount
@@ -13,7 +14,10 @@ Feature: EMI calculator
 
   Scenario: Personal loan bar chart exposes schedule values
     Given I open the EMI calculator
+    Then the calculator dashboard should be visible
     When I select the "Personal Loan" tab
     Then the EMI bar chart should be visible and contain data bars
+    And the first bar tooltip should match the calculated remaining balance
     When I set the payment schedule start month to "2026-12"
     Then the payment schedule start month should be "2026-12"
+    And the first schedule payment date should be "Dec 2026"

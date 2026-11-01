@@ -1,6 +1,6 @@
 # ClearPlan EMI Calculator — Streamhub Section A
 
-This project implements **Option A / Section A** of the Streamhub assessment. It includes a small responsive EMI application, a Playwright + Cucumber UI framework, JSONPlaceholder POST boundary coverage, and SQL scenarios with a reproducible sample fixture.
+This project implements **Option A / Section A** of the Streamhub assessment. It includes a responsive EMI application, a Playwright + Cucumber UI framework, a validated JSONPlaceholder POST proxy, and PostgreSQL scenarios with reproducible sample data and query evidence.
 
 ## Project map
 
@@ -58,20 +58,18 @@ Open `http://localhost:3000`. The Home Loan tab defaults to 25 lakh, 10%, 10 yea
 | --- | --- |
 | A1 dashboard, input-driven report, chart | `app/page.tsx`: calculator, pie breakdown, month schedule and bar chart |
 | A2 framework and UI tests | `features/emi-calculator.feature`, `tests/steps`, `tests/pages`, `cucumber.cjs` |
-| A3 JSONPlaceholder POST boundaries | `tests/api/posts.spec.ts`, Playwright request fixture |
+| A3 JSONPlaceholder POST boundaries | `app/api/posts/route.ts` validates requests before forwarding valid posts; `tests/api/posts.spec.ts` covers boundary responses |
 | A4 PostgreSQL | `sql/schema.sql`, `sql/sample-data.sql`, and two PostgreSQL scenario queries; pgAdmin evidence instructions are in `sql/README.md` |
 
 Run UI scenarios with `npm run test:ui` (start the app separately). Run API scenarios with `npm run test:api`. Run both using `npm run test:all`. UI tests write `artifacts/ui-report.html`; API tests write `artifacts/api-report/`.
 
 ## UI framework design
 
-Feature files describe behavior; Cucumber step definitions coordinate actions; `EmiCalculatorPage` encapsulates accessible role, label and test-id locators. Environment-specific application URL is configured with `APP_BASE_URL` (defaults to `http://127.0.0.1:3000`). The Playwright API suite uses the public `https://jsonplaceholder.typicode.com` service.
+Feature files describe behavior; Cucumber step definitions coordinate actions; `EmiCalculatorPage` encapsulates accessible role, label and test-id locators. Environment-specific application URL is configured with `APP_BASE_URL` (defaults to `http://127.0.0.1:3000`). The API suite targets the local validation route; only valid posts are forwarded to the public `https://jsonplaceholder.typicode.com` service.
 
 ## Locator self-healing exercise
 
-`features/locator-self-healing.feature` contains three repaired scenarios: both sliders are found by their accessible names, and the balance chart is found by its accessible role and name. Run them alone with `npm run test:self-heal`; they are also included in the standard `npm run test:ui` and `npm run test:all` runs.
-
-The locator exercise follows a reviewable repair workflow: inspect the UI's accessible labels and roles, replace brittle positional or stale selectors with semantic locators, and assert the located control's value or visibility.
+`features/locator-self-healing.feature` contains three intentionally broken locator cases tagged `@self-heal`. The assessment asks that these incorrect examples remain broken, so the standard run excludes them. Run `npm run test:self-heal` to demonstrate their failures. The AI detection, prompt, review, and validation workflow is documented in [docs/locator-self-healing.md](docs/locator-self-healing.md).
 
 ## API test notes
 

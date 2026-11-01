@@ -13,6 +13,23 @@ function calculate(principalLakhs: number, annualRate: number, years: number) {
   return { emi, total: emi * months, interest: emi * months - principal };
 }
 
+function buildSchedule(principalLakhs: number, annualRate: number, years: number, startMonth: string) {
+  const principal = principalLakhs * 100_000;
+  const count = years * 12;
+  const monthlyRate = annualRate / 1200;
+  const payment = calculate(principalLakhs, annualRate, years).emi;
+  const [startYear, startMonthNumber] = startMonth.split("-").map(Number);
+  let balance = principal;
+
+  return Array.from({ length: count }, (_, index) => {
+    const interest = balance * monthlyRate;
+    const principalPaid = Math.min(balance, payment - interest);
+    balance = Math.max(0, balance - principalPaid);
+    const date = new Date(startYear, startMonthNumber - 1 + index, 1);
+    return { number: index + 1, date: date.toLocaleDateString("en-IN", { month: "short", year: "numeric" }), payment: principalPaid + interest, principal: principalPaid, interest, balance };
+  });
+}
+
 export default function HomePage() {
   const [tab, setTab] = useState<LoanTab>("Home Loan");
   const [amount, setAmount] = useState(25);
@@ -20,6 +37,7 @@ export default function HomePage() {
   const [years, setYears] = useState(10);
   const [startMonth, setStartMonth] = useState("2026-11");
   const result = useMemo(() => calculate(amount, rate, years), [amount, rate, years]);
+  const schedule = useMemo(() => buildSchedule(amount, rate, years, startMonth), [amount, rate, years, startMonth]);
   const months = years * 12;
   const principalPercent = Math.round((amount * 100_000 / result.total) * 100);
 
@@ -53,9 +71,18 @@ export default function HomePage() {
           <div role="img" aria-label={`EMI breakdown chart: ${principalPercent}% principal, ${100 - principalPercent}% interest`} data-testid="emi-pie-chart" className="relative mx-auto grid h-40 w-40 place-items-center rounded-full" style={{ background: `conic-gradient(#2dd4bf 0% ${principalPercent}%, #fbbf24 ${principalPercent}% 100%)` }}><div className="grid h-24 w-24 place-items-center rounded-full bg-slate-900 text-center"><span className="text-xs text-slate-300">Principal<br />vs interest</span></div></div>
           <div><h3 className="font-semibold">Payment breakdown</h3><p className="mt-1 text-sm text-slate-300">How your total repayment is split.</p><Legend color="bg-teal-400" label="Principal" value={money(amount * 100_000)} /><Legend color="bg-amber-400" label="Interest" value={money(result.interest)} /></div>
         </div>
-        <div className="mt-7 border-t border-white/15 pt-5"><h3 className="mb-3 font-semibold">Balance over time</h3><div role="img" aria-label="Loan balance bar chart" data-testid="emi-bar-chart" className="flex h-24 items-end gap-1" title="Remaining principal by month">{Array.from({ length: Math.min(months, 36) }, (_, index) => { const fraction = 1 - (index + 1) / Math.min(months, 36); return <div key={index} title={`Month ${index + 1}: ${money(amount * 100_000 * fraction)}`} className="min-w-1 flex-1 rounded-t bg-teal-400/80 hover:bg-teal-300" style={{ height: `${Math.max(8, fraction * 100)}%` }} />; })}</div><p className="mt-2 text-xs text-slate-400">First {Math.min(months, 36)} payments · hover a bar for remaining principal</p></div>
+        <div className="mt-7 border-t border-white/15 pt-5"><h3 className="mb-3 font-semibold">Balance over time</h3><div role="img" aria-label="Loan balance bar chart" data-testid="emi-bar-chart" className="flex h-24 items-end gap-1" title="Remaining principal by month">{schedule.slice(0, 36).map((row) => { const fraction = row.balance / (amount * 100_000); return <div key={row.number} title={`${row.date}: ${money(row.balance)} remaining`} className="min-w-1 flex-1 rounded-t bg-teal-400/80 hover:bg-teal-300" style={{ height: `${Math.max(2, fraction * 100)}%` }} />; })}</div><p className="mt-2 text-xs text-slate-400">First {Math.min(months, 36)} payments · hover a bar for remaining principal</p></div>
       </section>
     </div>
+    <section aria-label="Monthly repayment schedule" className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-200 px-6 py-5 sm:px-8"><h2 className="text-xl font-bold text-slate-900">Monthly repayment schedule</h2><p className="mt-1 text-sm text-slate-600">Principal, interest, and remaining balance for each payment.</p></div>
+      <div className="max-h-[28rem] overflow-auto">
+        <table className="w-full min-w-[640px] text-left text-sm">
+          <thead className="sticky top-0 bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-6 py-3 font-semibold">#</th><th className="px-6 py-3 font-semibold">Payment date</th><th className="px-6 py-3 text-right font-semibold">EMI</th><th className="px-6 py-3 text-right font-semibold">Principal</th><th className="px-6 py-3 text-right font-semibold">Interest</th><th className="px-6 py-3 text-right font-semibold">Balance</th></tr></thead>
+          <tbody className="divide-y divide-slate-100">{schedule.map((row) => <tr key={row.number} className="text-slate-700"><td className="px-6 py-3 text-slate-400">{row.number}</td><td data-testid={row.number === 1 ? "schedule-first-payment-date" : undefined} className="px-6 py-3 font-medium">{row.date}</td><td className="px-6 py-3 text-right tabular-nums">{money(row.payment)}</td><td className="px-6 py-3 text-right tabular-nums">{money(row.principal)}</td><td className="px-6 py-3 text-right tabular-nums">{money(row.interest)}</td><td className="px-6 py-3 text-right tabular-nums">{money(row.balance)}</td></tr>)}</tbody>
+        </table>
+      </div>
+    </section>
     <footer className="mt-6 text-center text-xs text-slate-500">Illustrative estimates. Actual terms depend on your lender.</footer>
   </main>;
 }
