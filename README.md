@@ -1,6 +1,6 @@
 # ClearPlan EMI Calculator — Streamhub Section A
 
-This project implements **Option A / Section A** of the Streamhub assessment. It includes a responsive EMI application, a Playwright + Cucumber UI framework, a validated JSONPlaceholder POST proxy, and PostgreSQL scenarios with reproducible sample data and query evidence.
+This project implements **Option A / Section A** of the Streamhub assessment. It includes a responsive EMI application, pure calculation logic with unit coverage, Playwright + Cucumber browser tests, direct JSONPlaceholder POST boundary checks, and PostgreSQL scenarios with reproducible sample data.
 
 ## Project map
 
@@ -10,6 +10,8 @@ flowchart LR
     App --> Calc[EMI and repayment calculations]
     Calc --> Charts[Pie breakdown, monthly schedule, and bar chart]
 
+    UnitTests[Node unit tests + V8 coverage] --> Calc
+
     subgraph UI["A2 · UI automation"]
         Feature[Feature scenarios] --> Steps[Cucumber step definitions]
         Steps --> PageObject[EmiCalculatorPage]
@@ -18,7 +20,7 @@ flowchart LR
     Browser --> App
 
     subgraph API["A3 · API checks"]
-        ApiTest[Playwright API tests] --> Mock[JSONPlaceholder]
+        ApiTest[Direct Playwright API tests] --> Mock[JSONPlaceholder]
     end
 
     subgraph SQL["A4 · PostgreSQL"]
@@ -32,13 +34,7 @@ flowchart LR
     Results -. summarizes .-> SQL
 ```
 
-Use the links below to jump straight to each part of the project:
-
-- [A1 calculator UI](app/page.tsx)
-- [A2 feature scenarios](features/emi-calculator.feature) · [step definitions](tests/steps) · [page objects](tests/pages)
-- [A3 API tests](tests/api/posts.spec.ts)
-- [A4 PostgreSQL setup and queries](sql/README.md)
-- [Latest assessment test results](artifacts/assessment-results.md)
+Project files: [calculator](app/page.tsx) · [calculation module](lib/emi.js) · [unit tests](tests/unit/emi.test.cjs) · [UI features](features/emi-calculator.feature) · [API tests](tests/api/posts.spec.ts) · [SQL evidence](sql/README.md) · [latest results](artifacts/assessment-results.md).
 
 ## Setup and run
 
@@ -56,24 +52,24 @@ Open `http://localhost:3000`. The Home Loan tab defaults to 25 lakh, 10%, 10 yea
 
 | Requirement | Implementation |
 | --- | --- |
-| A1 dashboard, input-driven report, chart | `app/page.tsx`: calculator, pie breakdown, month schedule and bar chart |
-| A2 framework and UI tests | `features/emi-calculator.feature`, `tests/steps`, `tests/pages`, `cucumber.cjs` |
-| A3 JSONPlaceholder POST boundaries | `app/api/posts/route.ts` validates requests before forwarding valid posts; `tests/api/posts.spec.ts` covers boundary responses |
+| A1 dashboard, input-driven report, chart | `app/page.tsx` and `lib/emi.js`: independently tested calculator, summary metrics, chart, and monthly schedule |
+| A2 framework and UI tests | `features/emi-calculator.feature`, `tests/steps`, `tests/pages`, `cucumber.cjs`; unit coverage is in `tests/unit` |
+| A3 JSONPlaceholder POST boundaries | `tests/api/posts.spec.ts` sends requests directly to the specified public endpoint and records known provider mismatches |
 | A4 PostgreSQL | `sql/schema.sql`, `sql/sample-data.sql`, and two PostgreSQL scenario queries; pgAdmin evidence instructions are in `sql/README.md` |
 
-Run UI scenarios with `npm run test:ui` (start the app separately). Run API scenarios with `npm run test:api`. Run both using `npm run test:all`. UI tests write `artifacts/ui-report.html`; API tests write `artifacts/api-report/`.
+Start the app with `npm run dev` in one terminal. Then run `npm run test:unit` for the calculation logic, `npm run test:api` for direct JSONPlaceholder checks, `npm run test:ui` for Cucumber browser journeys, or `npm run test:all` for all three. Unit tests print a V8 coverage summary. UI tests write `artifacts/ui-report.html`; API tests write `artifacts/api-report/`.
 
 ## UI framework design
 
-Feature files describe behavior; Cucumber step definitions coordinate actions; `EmiCalculatorPage` encapsulates accessible role, label and test-id locators. Environment-specific application URL is configured with `APP_BASE_URL` (defaults to `http://127.0.0.1:3000`). The API suite targets the local validation route; only valid posts are forwarded to the public `https://jsonplaceholder.typicode.com` service.
+Feature files describe behavior; Cucumber step definitions coordinate actions; `EmiCalculatorPage` encapsulates accessible role, label and test-id locators. Environment-specific application URL is configured with `APP_BASE_URL` (defaults to `http://127.0.0.1:3000`). API tests use Playwright's request fixture directly against `https://jsonplaceholder.typicode.com`.
 
 ## Locator self-healing exercise
 
-`features/locator-self-healing.feature` contains three intentionally broken locator cases tagged `@self-heal`. The assessment asks that these incorrect examples remain broken, so the standard run excludes them. Run `npm run test:self-heal` to demonstrate their failures. The AI detection, prompt, review, and validation workflow is documented in [docs/locator-self-healing.md](docs/locator-self-healing.md).
+`features/locator-self-healing.feature` contains three intentionally broken locator cases, tagged `@self-heal`; the standard run excludes this tag. The assessment asks that these incorrect examples remain broken. To demonstrate their failures, run `npm run test:self-heal`. The detection, prompt, review, and validation workflow is documented in [docs/locator-self-healing.md](docs/locator-self-healing.md).
 
 ## API test notes
 
-The Playwright suite targets the local `POST /api/posts` validation proxy. It validates a non-empty title (up to 255 characters), a non-empty body, and a positive integer `userId`; malformed JSON receives `400`, and invalid fields receive `422` with an error message. Valid posts are forwarded to JSONPlaceholder, so the API checks require internet access for the valid-post scenario.
+The API tests target `POST https://jsonplaceholder.typicode.com/posts` directly, as requested. The valid-post case expects `201`. Invalid-input cases assert the requested client-error behavior and are marked as known provider mismatches so the suite reports them without hiding the defect. In the direct check on 2026-11-03, JSONPlaceholder returned `201` for the oversized title, NUL character, and missing `userId`, and `500` for malformed JSON. These expected failures are provider behavior, not local validation results. If the provider begins rejecting an invalid input correctly, Playwright reports an unexpected pass so the known-issue marker can be removed.
 
 ## SQL
 
@@ -81,8 +77,8 @@ PostgreSQL is the A4 database. See [sql/README.md](sql/README.md) for the table 
 
 ## AI pairing reflection
 
-AI was used as a pair programmer to map the assessment into a working application and automation structure, scaffold the feature/page-object/step layers, and review boundary cases. It was useful for getting the first pass into a coherent structure and surfacing that JSONPlaceholder is permissive. The generated code still needs human review: locator uniqueness, mock-service behavior, SQL dialect and the precise meaning of a player "streak" are assumptions that must be checked against the actual environment/data. AI suggestions should not be applied blindly; each repaired locator needs DOM inspection and a focused plus full-suite validation.
+AI was useful for scaffolding the feature, step-definition, and page-object structure, but I checked its output against the brief and the running application. For example, an early chart used a linear balance decline; I replaced it with a reducing-balance amortization schedule and verified the first tooltip and schedule values independently. An initial API wrapper made our own validation pass while masking JSONPlaceholder's behavior; I removed that wrapper and changed the tests to call the provider directly, preserving its observed 201/500 mismatches as known failures. I also removed leftover dark-pattern audit modules and dependencies because they were unrelated to this assessment. Locator suggestions are reviewed against the DOM and accessible names before use; the three deliberately brittle examples remain broken because the assessment asks for them to be left broken.
 
 ## Test execution results
 
-See [artifacts/assessment-results.md](artifacts/assessment-results.md) for the latest recorded results. The [GitHub Actions workflow](.github/workflows/assessment.yml) runs typecheck, build, API validation, and the complete Cucumber UI suite, then uploads the Playwright reports. Locally, API tests start the Next.js server automatically; start the app separately before running the Cucumber UI suite.
+Latest local run: see `artifacts/assessment-results.md` for current run status. The API suite requires internet access; the UI suite requires Chromium and a running local server. Playwright HTML reports are generated locally by the test commands. The [GitHub Actions workflow](.github/workflows/assessment.yml) runs typecheck, unit coverage, build, direct API checks, and the standard Cucumber suite.

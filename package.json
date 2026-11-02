@@ -2,23 +2,21 @@
   "name": "emi-calculator-playwright-assessment",
   "version": "0.1.0",
   "private": true,
-  "description": "EMI calculator with Playwright and Cucumber UI automation, API boundary tests, and SQL assessment examples.",
+  "description": "EMI calculator with unit, Playwright, Cucumber, API boundary, and SQL assessment coverage.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "test:unit": "node --test --experimental-test-coverage tests/unit/emi.test.cjs",
     "test": "cucumber-js",
     "test:api": "playwright test tests/api",
     "test:ui": "cucumber-js",
     "test:self-heal": "cucumber-js --tags @self-heal",
-    "test:all": "npm run test:api && npm run test:ui"
+    "test:all": "npm run test:unit && npm run test:api && npm run test:ui"
   },
   "dependencies": {
-    "@solarisdk/browser": "^0.1.0",
     "next": "^14.2.5",
-    "nanoid": "^5.0.7",
-    "playwright-core": "^1.46.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

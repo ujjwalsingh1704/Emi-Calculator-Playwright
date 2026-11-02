@@ -1,34 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { buildRepaymentSchedule, calculateEmi } from "@/lib/emi";
 
 type LoanTab = "Home Loan" | "Personal Loan";
 const money = (amount: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(amount);
-
-function calculate(principalLakhs: number, annualRate: number, years: number) {
-  const principal = principalLakhs * 100_000;
-  const months = years * 12;
-  const monthlyRate = annualRate / 1200;
-  const emi = monthlyRate === 0 ? principal / months : principal * monthlyRate * (1 + monthlyRate) ** months / ((1 + monthlyRate) ** months - 1);
-  return { emi, total: emi * months, interest: emi * months - principal };
-}
-
-function buildSchedule(principalLakhs: number, annualRate: number, years: number, startMonth: string) {
-  const principal = principalLakhs * 100_000;
-  const count = years * 12;
-  const monthlyRate = annualRate / 1200;
-  const payment = calculate(principalLakhs, annualRate, years).emi;
-  const [startYear, startMonthNumber] = startMonth.split("-").map(Number);
-  let balance = principal;
-
-  return Array.from({ length: count }, (_, index) => {
-    const interest = balance * monthlyRate;
-    const principalPaid = Math.min(balance, payment - interest);
-    balance = Math.max(0, balance - principalPaid);
-    const date = new Date(startYear, startMonthNumber - 1 + index, 1);
-    return { number: index + 1, date: date.toLocaleDateString("en-IN", { month: "short", year: "numeric" }), payment: principalPaid + interest, principal: principalPaid, interest, balance };
-  });
-}
 
 export default function HomePage() {
   const [tab, setTab] = useState<LoanTab>("Home Loan");
@@ -36,8 +12,8 @@ export default function HomePage() {
   const [rate, setRate] = useState(10);
   const [years, setYears] = useState(10);
   const [startMonth, setStartMonth] = useState("2026-11");
-  const result = useMemo(() => calculate(amount, rate, years), [amount, rate, years]);
-  const schedule = useMemo(() => buildSchedule(amount, rate, years, startMonth), [amount, rate, years, startMonth]);
+  const result = useMemo(() => calculateEmi(amount, rate, years), [amount, rate, years]);
+  const schedule = useMemo(() => buildRepaymentSchedule(amount, rate, years, startMonth), [amount, rate, years, startMonth]);
   const months = years * 12;
   const principalPercent = Math.round((amount * 100_000 / result.total) * 100);
 
@@ -79,7 +55,7 @@ export default function HomePage() {
       <div className="max-h-[28rem] overflow-auto">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="sticky top-0 bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-6 py-3 font-semibold">#</th><th className="px-6 py-3 font-semibold">Payment date</th><th className="px-6 py-3 text-right font-semibold">EMI</th><th className="px-6 py-3 text-right font-semibold">Principal</th><th className="px-6 py-3 text-right font-semibold">Interest</th><th className="px-6 py-3 text-right font-semibold">Balance</th></tr></thead>
-          <tbody className="divide-y divide-slate-100">{schedule.map((row) => <tr key={row.number} className="text-slate-700"><td className="px-6 py-3 text-slate-400">{row.number}</td><td data-testid={row.number === 1 ? "schedule-first-payment-date" : undefined} className="px-6 py-3 font-medium">{row.date}</td><td className="px-6 py-3 text-right tabular-nums">{money(row.payment)}</td><td className="px-6 py-3 text-right tabular-nums">{money(row.principal)}</td><td className="px-6 py-3 text-right tabular-nums">{money(row.interest)}</td><td className="px-6 py-3 text-right tabular-nums">{money(row.balance)}</td></tr>)}</tbody>
+          <tbody className="divide-y divide-slate-100">{schedule.map((row) => <tr key={row.number} className="text-slate-700"><td className="px-6 py-3 text-slate-400">{row.number}</td><td data-testid={row.number === 1 ? "schedule-first-payment-date" : undefined} className="px-6 py-3 font-medium">{row.date}</td><td data-testid={row.number === 1 ? "schedule-first-emi" : undefined} className="px-6 py-3 text-right tabular-nums">{money(row.payment)}</td><td data-testid={row.number === 1 ? "schedule-first-principal" : undefined} className="px-6 py-3 text-right tabular-nums">{money(row.principal)}</td><td data-testid={row.number === 1 ? "schedule-first-interest" : undefined} className="px-6 py-3 text-right tabular-nums">{money(row.interest)}</td><td data-testid={row.number === 1 ? "schedule-first-balance" : undefined} className="px-6 py-3 text-right tabular-nums">{money(row.balance)}</td></tr>)}</tbody>
         </table>
       </div>
     </section>

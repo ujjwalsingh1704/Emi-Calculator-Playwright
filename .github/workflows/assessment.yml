@@ -17,8 +17,9 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run typecheck
+      - run: npm run test:unit
       - run: npm run build
-      - name: Run API validation tests
+      - name: Run direct JSONPlaceholder behavior tests
         run: npm run test:api
       - name: Start app for UI scenarios
         run: |

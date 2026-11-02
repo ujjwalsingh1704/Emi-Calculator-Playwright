@@ -7,15 +7,38 @@ let browser;
 let page;
 let calculator;
 let expectedEmi = 0;
+let expectedPrincipal = 0;
+let expectedTotal = 0;
+let expectedInterest = 0;
+let expectedMonths = 0;
+let expectedPrincipalPercent = 0;
 
 function formatMoney(amount) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(amount);
+}
+
+function setExpectedFigures(amountLakhs, annualRate, years) {
+  expectedPrincipal = amountLakhs * 100_000;
+  expectedMonths = years * 12;
+  const monthlyRate = annualRate / 1200;
+  expectedEmi = monthlyRate === 0
+    ? expectedPrincipal / expectedMonths
+    : expectedPrincipal * monthlyRate * (1 + monthlyRate) ** expectedMonths / ((1 + monthlyRate) ** expectedMonths - 1);
+  expectedTotal = expectedEmi * expectedMonths;
+  expectedInterest = expectedTotal - expectedPrincipal;
+  expectedPrincipalPercent = Math.round(expectedPrincipal / expectedTotal * 100);
+}
+
+async function displayedMoney(testId) {
+  const text = await page.getByTestId(testId).innerText();
+  return Number(text.replace(/[^\d]/g, ""));
 }
 
 Given("I open the EMI calculator", async function () {
   browser = await chromium.launch({ headless: true });
   page = await browser.newPage();
   calculator = new EmiCalculatorPage(page);
+  setExpectedFigures(25, 10, 10);
   await calculator.open();
   await expect(page.getByRole("heading", { name: "EMI Calculator" })).toBeVisible();
 });
@@ -23,22 +46,38 @@ Then("the calculator dashboard should be visible", async function () {
   await expect(page.getByRole("region", { name: "Loan inputs" })).toBeVisible();
   await expect(page.getByRole("region", { name: "EMI report" })).toBeVisible();
 });
-When('I select the {string} tab', async function (name) { await calculator.selectTab(name); });
+When('I select the {string} tab', async function (name) {
+  await calculator.selectTab(name);
+  if (name === "Personal Loan") setExpectedFigures(10, 12, 5);
+  else if (name === "Home Loan") setExpectedFigures(25, 10, 10);
+});
 When("I set loan amount to {int} lakhs, interest rate to {float} percent, and tenure to {int} years", async function (amount, rate, years) {
   await calculator.setSlider("Loan Amount", amount);
   await calculator.setSlider("Interest Rate", rate);
   await calculator.setSlider("Loan Tenure", years);
-  const principal = amount * 100_000; const monthlyRate = rate / 1200; const n = years * 12;
-  expectedEmi = principal * monthlyRate * (1 + monthlyRate) ** n / ((1 + monthlyRate) ** n - 1);
+  setExpectedFigures(amount, rate, years);
 });
 Then("the monthly EMI should equal the independently calculated amount", async function () {
   const shown = await page.getByTestId("emi-value").innerText();
   expect(Math.abs(Number(shown.replace(/[^\d.]/g, "")) - expectedEmi)).toBeLessThanOrEqual(1);
 });
+Then("every repayment summary figure should match the independent calculation", async function () {
+  expect(Math.abs(await displayedMoney("metric-principal-amount") - expectedPrincipal)).toBeLessThanOrEqual(1);
+  expect(Math.abs(await displayedMoney("metric-total-interest") - expectedInterest)).toBeLessThanOrEqual(1);
+  expect(Math.abs(await displayedMoney("metric-total-payment") - expectedTotal)).toBeLessThanOrEqual(1);
+  await expect(page.getByTestId("metric-payments").locator("p").nth(1)).toHaveText(`${expectedMonths} months`);
+});
 Then("the pie chart should be visible with positive principal and interest values", async function () {
   await expect(calculator.chart("emi-pie-chart")).toBeVisible();
-  expect(Number((await page.getByTestId("metric-principal-amount").innerText()).replace(/[^\d]/g, ""))).toBeGreaterThan(0);
-  expect(Number((await page.getByTestId("metric-total-interest").innerText()).replace(/[^\d]/g, ""))).toBeGreaterThan(0);
+  expect(expectedPrincipal).toBeGreaterThan(0);
+  expect(expectedInterest).toBeGreaterThan(0);
+  await expect(calculator.chart("emi-pie-chart")).toHaveAttribute(
+    "aria-label",
+    `EMI breakdown chart: ${expectedPrincipalPercent}% principal, ${100 - expectedPrincipalPercent}% interest`
+  );
+});
+Then("the schedule should have one row per payment", async function () {
+  expect(await calculator.scheduleRows().count()).toBe(expectedMonths);
 });
 Then("the EMI bar chart should be visible and contain data bars", async function () {
   const chart = calculator.chart("emi-bar-chart"); await expect(chart).toBeVisible();
@@ -53,6 +92,17 @@ Then("the first bar tooltip should match the calculated remaining balance", asyn
   const tooltip = await calculator.firstBarTooltip();
   expect(tooltip).toContain("Nov 2026");
   expect(tooltip).toContain(formatMoney(balanceAfterFirstPayment));
+});
+Then("the first installment figures should match independent calculations", async function () {
+  const principal = 10 * 100_000;
+  const monthlyRate = 12 / 1200;
+  const interest = principal * monthlyRate;
+  const principalPaid = expectedEmi - interest;
+  const expected = [expectedEmi, principalPaid, interest, principal - principalPaid];
+  const testIds = ["schedule-first-emi", "schedule-first-principal", "schedule-first-interest", "schedule-first-balance"];
+  for (let index = 0; index < testIds.length; index += 1) {
+    expect(Math.abs(await displayedMoney(testIds[index]) - expected[index])).toBeLessThanOrEqual(1);
+  }
 });
 When('I set the payment schedule start month to {string}', async function (month) { await calculator.setStartMonth(month); });
 Then('the payment schedule start month should be {string}', async function (month) { await calculator.expectStartMonth(month); });
